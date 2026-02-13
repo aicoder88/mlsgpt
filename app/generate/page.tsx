@@ -22,6 +22,7 @@ export default function GeneratePage() {
           <p className="mt-3 max-w-3xl text-ink/75">
             Enter listing data once and get channel-ready outputs in one pass. This page is optimized for fast repeat workflows.
           </p>
+          <p className="mt-2 text-sm text-ink/65">Free tier: 3 generations per day. Paid plans unlock higher volume.</p>
         </div>
       </section>
       <GeneratorForm />

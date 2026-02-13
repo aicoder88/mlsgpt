@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { verifyAccessToken } from "@/lib/access-token";
 import { getOpenAIClient } from "@/lib/openai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompts";
 import { rateLimit } from "@/lib/rate-limit";
@@ -7,14 +8,27 @@ import { generatedPackSchema, listingInputSchema } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const throttle = rateLimit(ip, 20, 60 * 60 * 1000);
+  const accessCookie = request.cookies.get("mlsgpt_access")?.value;
+  const signingSecret = process.env.ACCESS_TOKEN_SECRET;
+
+  const verified =
+    accessCookie && signingSecret ? verifyAccessToken(accessCookie, signingSecret) : null;
+  const planTier = verified ? "paid" : "free";
+  const rateWindowMs = verified ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  const rateLimitCount = verified ? 300 : 3;
+  const throttle = rateLimit(`${ip}:${planTier}`, rateLimitCount, rateWindowMs);
 
   if (!throttle.ok) {
+    const message = verified
+      ? "Rate limit reached for your current plan. Please try again soon."
+      : "Free trial limit reached (3 generations/day). Upgrade to continue.";
+
     return NextResponse.json(
-      { error: "Rate limit reached. Please try again later." },
+      { error: message },
       {
         status: 429,
         headers: {
+          "X-Plan-Tier": planTier,
           "X-RateLimit-Remaining": String(throttle.remaining),
           "X-RateLimit-Reset": String(throttle.resetAt)
         }
@@ -71,6 +85,7 @@ export async function POST(request: NextRequest) {
       {
         headers: {
           "Cache-Control": "no-store",
+          "X-Plan-Tier": planTier,
           "X-RateLimit-Remaining": String(throttle.remaining),
           "X-RateLimit-Reset": String(throttle.resetAt)
         }

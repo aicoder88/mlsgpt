@@ -135,7 +135,7 @@ export default function HomePage() {
       <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-3xl font-semibold text-ink sm:text-4xl">Simple recurring pricing</h2>
-          <p className="mt-3 text-ink/75">Low-touch SaaS model designed to run automatically once live.</p>
+          <p className="mt-3 text-ink/75">Includes a free demo tier with 3 generations/day before paid plans.</p>
         </div>
 
         <div className="mt-8 grid gap-5 md:grid-cols-2">

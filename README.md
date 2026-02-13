@@ -8,6 +8,7 @@ Vercel-ready Next.js SaaS for `mlsgpt.com`.
 - Live generator app (`/generate`) for MLS-to-marketing packs
 - OpenAI-backed generation API (`/api/generate`) with validation + rate limiting
 - Stripe checkout API (`/api/create-checkout`) for Starter/Pro subscriptions
+- Checkout activation API (`/api/activate-subscription`) that issues signed paid-access cookies
 - SEO setup: metadata, JSON-LD, `sitemap.xml`, `robots.txt`
 - Legal/trust pages: privacy + terms
 - Image placeholder system designed for post-generation automation
@@ -29,7 +30,14 @@ Copy `.env.example` to `.env.local` and fill:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_PRICE_STARTER`
 - `STRIPE_PRICE_PRO`
+- `ACCESS_TOKEN_SECRET` (long random string)
 - optional: `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`
+
+## Access model
+
+- Free users: 3 generations per day
+- Paid users: 300 generations/hour after successful Stripe checkout activation
+- On `/success`, the app exchanges `session_id` for a signed `mlsgpt_access` cookie
 
 ## Vercel deployment
 
