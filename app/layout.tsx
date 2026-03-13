@@ -18,11 +18,19 @@ const serif = Source_Serif_4({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://mlsgpt.com"),
   title: {
-    default: "MLSGPT | MLS Listing to Marketing Pack in 60 Seconds",
+    default: "MLSGPT | AI Real Estate Listing Description Generator",
     template: "%s | MLSGPT"
   },
   description:
-    "Turn one MLS listing into high-converting descriptions, social posts, email blasts, and short video scripts automatically.",
+    "Generate MLS descriptions, real estate social media captions, email blasts, open house promos, and seller updates from one listing brief.",
+  keywords: [
+    "AI real estate listing description generator",
+    "MLS description generator",
+    "real estate social media caption generator",
+    "open house marketing generator",
+    "real estate email generator",
+    "AI for real estate agents"
+  ],
   alternates: {
     canonical: "/"
   },
@@ -31,13 +39,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://mlsgpt.com",
     siteName: "MLSGPT",
-    title: "MLSGPT",
-    description: "AI marketing engine for real-estate agents. Generate listing content instantly."
+    title: "MLSGPT | AI Real Estate Listing Description Generator",
+    description:
+      "Generate MLS descriptions, real estate social captions, email blasts, open house copy, and seller updates in one workflow."
   },
   twitter: {
     card: "summary_large_image",
-    title: "MLSGPT",
-    description: "MLS listing in. Full marketing pack out."
+    title: "MLSGPT | AI Real Estate Listing Description Generator",
+    description: "MLS listing in. Full real-estate marketing pack out."
   }
 };
 

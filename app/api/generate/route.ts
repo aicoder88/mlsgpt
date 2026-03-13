@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { verifyAccessToken } from "@/lib/access-token";
 import { getOpenAIClient } from "@/lib/openai";
-import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompts";
+import { buildPartialUserPrompt, buildSystemPrompt, buildUserPrompt } from "@/lib/prompts";
 import { rateLimit } from "@/lib/rate-limit";
-import { generatedPackSchema, listingInputSchema } from "@/lib/types";
+import {
+  fullGenerationRequestSchema,
+  generatedPackSchema,
+  legacyListingInputSchema,
+  partialGenerationOutputSchemas,
+  partialGenerationRequestSchema,
+  type LegacyListingInput,
+  type ListingInput
+} from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -44,9 +53,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const parsed = listingInputSchema.safeParse(body);
+  const fullRequest = fullGenerationRequestSchema.safeParse(body);
+  const partialRequest = partialGenerationRequestSchema.safeParse(body);
+  const legacyFullRequest = legacyListingInputSchema.safeParse(body);
 
-  if (!parsed.success) {
+  if (!fullRequest.success && !partialRequest.success && !legacyFullRequest.success) {
     return NextResponse.json({ error: "Invalid input payload." }, { status: 400 });
   }
 
@@ -60,6 +71,21 @@ export async function POST(request: NextRequest) {
   try {
     const client = getOpenAIClient();
     const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+    let input;
+    let prompt: string;
+
+    if (partialRequest.success) {
+      input = partialRequest.data.input;
+      prompt = buildPartialUserPrompt(partialRequest.data);
+    } else if (fullRequest.success) {
+      input = fullRequest.data.input;
+      prompt = buildUserPrompt(input);
+    } else if (legacyFullRequest.success) {
+      input = upgradeLegacyListingInput(legacyFullRequest.data);
+      prompt = buildUserPrompt(input);
+    } else {
+      return NextResponse.json({ error: "Invalid input payload." }, { status: 400 });
+    }
 
     const completion = await client.chat.completions.create({
       model,
@@ -67,7 +93,7 @@ export async function POST(request: NextRequest) {
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: buildSystemPrompt() },
-        { role: "user", content: buildUserPrompt(parsed.data) }
+        { role: "user", content: prompt }
       ]
     });
 
@@ -78,7 +104,9 @@ export async function POST(request: NextRequest) {
     }
 
     const raw = JSON.parse(content) as unknown;
-    const output = generatedPackSchema.parse(raw);
+    const output = partialRequest.success
+      ? partialGenerationOutputSchemas[partialRequest.data.target].parse(raw)
+      : generatedPackSchema.parse(raw);
 
     return NextResponse.json(
       { data: output },
@@ -92,8 +120,31 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Generation failed.";
+    const message =
+      error instanceof z.ZodError
+        ? "Model response did not match the expected output shape."
+        : error instanceof Error
+          ? error.message
+          : "Generation failed.";
 
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+function upgradeLegacyListingInput(input: LegacyListingInput): ListingInput {
+  return {
+    ...input,
+    neighborhood: "Location context not provided. Focus on nearby amenities, convenience, and lifestyle fit.",
+    idealBuyer: defaultIdealBuyerByAudience[input.targetChannel],
+    ctaPreference: "Invite a private showing or request the full property details.",
+    listingGoal: "new-launch",
+    timeline: "launch-this-week"
+  };
+}
+
+const defaultIdealBuyerByAudience: Record<ListingInput["targetChannel"], ListingInput["idealBuyer"]> = {
+  buyers: "Buyer looking for a home that aligns with their lifestyle and day-to-day needs.",
+  sellers: "Seller-focused audience evaluating positioning, presentation, and next-step strategy.",
+  investors: "Investor looking for a property with practical upside, flexibility, or income potential.",
+  relocation: "Relocating buyer who values confidence, convenience, and a clear picture of the lifestyle."
+};

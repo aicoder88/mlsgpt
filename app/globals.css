@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f8fbff;
-  --surface: #ffffff;
-  --ink: #0f2f4f;
-  --accent: #0a986e;
-  --accent-2: #f4b459;
-  --line: #d8e4ef;
+  --bg: #f3f6f7;
+  --surface: #fbfcfd;
+  --ink: #0b2942;
+  --accent: #0f9b74;
+  --accent-2: #d8a054;
+  --line: #cad8e2;
 }
 
 * {
@@ -22,6 +22,11 @@ body {
 
 body {
   color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(216, 160, 84, 0.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(15, 155, 116, 0.16), transparent 28%),
+    radial-gradient(circle at 20% 78%, rgba(25, 91, 149, 0.14), transparent 26%),
+    linear-gradient(180deg, #eef4f3 0%, #f8fbfc 24%, #f6f7f3 100%);
 }
 
 a {
@@ -29,9 +34,66 @@ a {
   text-decoration: none;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    linear-gradient(to right, rgba(11, 41, 66, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 41, 66, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 82%);
+}
+
+::selection {
+  background: rgba(15, 155, 116, 0.18);
+  color: var(--ink);
+}
+
 .hero-glow {
   background: radial-gradient(circle at 72% 15%, rgba(10, 152, 110, 0.18), transparent 28%),
     radial-gradient(circle at 10% 10%, rgba(13, 111, 189, 0.2), transparent 42%);
+}
+
+.ambient-grid {
+  position: relative;
+}
+
+.ambient-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(135deg, rgba(0, 0, 0, 0.5), transparent 70%);
+}
+
+.glass-shell {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 250, 252, 0.94));
+  backdrop-filter: blur(18px);
+}
+
+.section-frame {
+  box-shadow:
+    0 26px 80px -44px rgba(9, 31, 49, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.lift-panel {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.lift-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px -30px rgba(9, 31, 49, 0.5);
 }
 
 .reveal {
